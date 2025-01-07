@@ -31,10 +31,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { addTask } from "@/redux/features/task/taskSlice";
-import { SelectUsers } from "@/redux/features/user/userSlice";
-import { useAppDispatch, useAppSelector } from "@/redux/hook";
-import { ITask } from "@/types";
+import { useCreateTaskMutation } from "@/redux/api/baseApi";
 import { DialogDescription } from "@radix-ui/react-dialog";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
@@ -43,12 +40,20 @@ import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 
 const AddTaskModal = () => {
   const [open, setOpen] = useState(false);
-  const users = useAppSelector(SelectUsers);
-  const dispatch = useAppDispatch();
+  const [createTask, { data, isLoading, isError }] = useCreateTaskMutation();
+
+  console.log("data", data);
 
   const form = useForm();
-  const onSubmit: SubmitHandler<FieldValues> = (data) => {
-    dispatch(addTask(data as ITask));
+  const onSubmit: SubmitHandler<FieldValues> = async (data) => {
+    const taskData = {
+      ...data,
+      isCompleted: false,
+    };
+
+    const res = await createTask(taskData).unwrap;
+    console.log("inside submit function", res);
+
     setOpen(false);
     form.reset();
   };
@@ -110,32 +115,6 @@ const AddTaskModal = () => {
                       <SelectItem value="high">High</SelectItem>
                       <SelectItem value="medium">Medium</SelectItem>
                       <SelectItem value="low">Low</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="assignedTo"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Assign To</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a user to assign this task" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {users.map((user) => (
-                        <SelectItem value={user.id}>{user.name}</SelectItem>
-                      ))}
                     </SelectContent>
                   </Select>
 

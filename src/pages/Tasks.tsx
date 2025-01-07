@@ -1,13 +1,20 @@
 import AddTaskModal from "@/components/module/tasks/AddTaskModal";
 import TaskCard from "@/components/module/tasks/TaskCard";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-import { selectTasks, updateFilter } from "@/redux/features/task/taskSlice";
-import { useAppDispatch, useAppSelector } from "@/redux/hook";
+import { useGetTasksQuery } from "@/redux/api/baseApi";
+import { ITask } from "@/types";
 
 const Tasks = () => {
-  const tasks = useAppSelector(selectTasks);
-  const dispatch = useAppDispatch();
+  const { data, isLoading } = useGetTasksQuery(undefined, {
+    pollingInterval: 30000,
+    refetchOnFocus: true,
+    refetchOnReconnect: true,
+    refetchOnMountOrArgChange: true,
+  });
+
+  if (isLoading) {
+    return <p>Loading....</p>;
+  }
 
   return (
     <div className="mx-auto max-w-7xl px-5 mt-10">
@@ -15,38 +22,19 @@ const Tasks = () => {
         <h1 className="mr-auto">Tasks</h1>
         <Tabs defaultValue="all" className="w-[400px]">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger
-              onClick={() => dispatch(updateFilter("all"))}
-              value="all"
-            >
-              All
-            </TabsTrigger>
-            <TabsTrigger
-              onClick={() => dispatch(updateFilter("high"))}
-              value="high"
-            >
-              High
-            </TabsTrigger>
-            <TabsTrigger
-              onClick={() => dispatch(updateFilter("medium"))}
-              value="medium"
-            >
-              Medium
-            </TabsTrigger>
-            <TabsTrigger
-              onClick={() => dispatch(updateFilter("low"))}
-              value="low"
-            >
-              Low
-            </TabsTrigger>
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="high">High</TabsTrigger>
+            <TabsTrigger value="medium">Medium</TabsTrigger>
+            <TabsTrigger value="low">Low</TabsTrigger>
           </TabsList>
         </Tabs>
         <AddTaskModal />
       </div>
       <div>
-        {tasks.map((task) => (
-          <TaskCard task={task} key={task.id} />
-        ))}
+        {!isLoading &&
+          data?.tasks.map((task: ITask) => (
+            <TaskCard task={task} key={task.id} />
+          ))}
       </div>
     </div>
   );
